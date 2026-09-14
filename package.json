@@ -9,6 +9,8 @@
     "dev": "vite dev --port 3000",
     "generate-routes": "tsr generate",
     "build": "vite build && cp -r dist/client public",
+    "start": "node dist/server/server.js",
+
     "preview": "vite preview",
     "format": "biome format",
     "lint": "biome lint",
