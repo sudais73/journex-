@@ -1,9 +1,12 @@
+import { createFileRoute } from '@tanstack/react-router'
 import { useState } from 'react';
-import { supabase } from '../lib/supabase';
 import { type Locale, translations } from '../lib/i18n';
+export const Route = createFileRoute('/auth')({
+  component: RouteComponent,
+})
 
-export function AuthPage() {
-  const [tab, setTab] = useState<'login' | 'register'>('register');
+function RouteComponent() {
+    const [tab, setTab] = useState<'login' | 'register'>('register');
   const [locale] = useState<Locale>('om');
   const t = translations[locale].auth;
 
@@ -27,53 +30,53 @@ export function AuthPage() {
   const [msg, setMsg] = useState<string | null>(null);
 
   const handleRegister = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setLoading(true);
-    setMsg(null);
+    // e.preventDefault();
+    // setLoading(true);
+    // setMsg(null);
 
-    // 1. Sign up Supabase user
-    const { data: authData, error: authError } = await supabase.auth.signUp({
-      email: form.email,
-      password: form.password,
-    });
+    // // 1. Sign up Supabase user
+    // const { data: authData, error: authError } = await supabase.auth.signUp({
+    //   email: form.email,
+    //   password: form.password,
+    // });
 
-    if (authError || !authData.user) {
-      setMsg(authError?.message || "Registration failed");
-      setLoading(false);
-      return;
-    }
+    // if (authError || !authData.user) {
+    //   setMsg(authError?.message || "Registration failed");
+    //   setLoading(false);
+    //   return;
+    // }
 
-    // 2. Generate referral username (e.g., first + random 4 digits)
-    const generatedUsername = `${form.firstName.toLowerCase()}${Math.floor(1000 + Math.random() * 9000)}`;
+    // // 2. Generate referral username (e.g., first + random 4 digits)
+    // const generatedUsername = `${form.firstName.toLowerCase()}${Math.floor(1000 + Math.random() * 9000)}`;
 
-    // 3. Store the user profile
-    const { error: profileError } = await supabase.from('profiles').insert([
-      {
-        id: authData.user.id,
-        first_name: form.firstName,
-        middle_name: form.middleName,
-        last_name: form.lastName,
-        work_job: form.job,
-        age: parseInt(form.age) || null,
-        phone: form.phone,
-        account_number: form.accountNumber,
-        address: form.address,
-        gender: form.gender,
-        educational_status: form.educationalStatus,
-        referral_username: form.referralUsername || null,
-        generated_username: generatedUsername,
-        role: 'partner',
-        pjp: 0,
-        tjp: 0
-      }
-    ]);
+    // // 3. Store the user profile
+    // const { error: profileError } = await supabase.from('profiles').insert([
+    //   {
+    //     id: authData.user.id,
+    //     first_name: form.firstName,
+    //     middle_name: form.middleName,
+    //     last_name: form.lastName,
+    //     work_job: form.job,
+    //     age: parseInt(form.age) || null,
+    //     phone: form.phone,
+    //     account_number: form.accountNumber,
+    //     address: form.address,
+    //     gender: form.gender,
+    //     educational_status: form.educationalStatus,
+    //     referral_username: form.referralUsername || null,
+    //     generated_username: generatedUsername,
+    //     role: 'partner',
+    //     pjp: 0,
+    //     tjp: 0
+    //   }
+    // ]);
 
-    if (profileError) {
-      setMsg(profileError.message);
-    } else {
-      setMsg("Account created successfully! Check your inbox or proceed to login.");
-    }
-    setLoading(false);
+    // if (profileError) {
+    //   setMsg(profileError.message);
+    // } else {
+    //   setMsg("Account created successfully! Check your inbox or proceed to login.");
+    // }
+    // setLoading(false);
   };
 
   return (
@@ -217,3 +220,7 @@ export function AuthPage() {
     </div>
   );
 }
+
+
+
+

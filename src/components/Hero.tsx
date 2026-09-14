@@ -1,7 +1,6 @@
-// app/components/Navbar.tsx, Hero.tsx, About.tsx, etc.
 import { type Locale, translations } from '../lib/i18n';
 import { Link } from '@tanstack/react-router';
-
+import heroimg from '../assets/hero-journex.jpg';
 export function Hero({ locale }: { locale: Locale }) {
   const t = translations[locale].hero;
 
@@ -47,7 +46,7 @@ export function Hero({ locale }: { locale: Locale }) {
         <div className="relative flex justify-center">
           <div className="relative rounded-2xl overflow-hidden shadow-2xl border-4 border-white/10 max-w-sm">
             <img
-              src="https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?q=80&w=800&auto=format&fit=crop"
+              src={heroimg}
               alt="Journex Learner"
               className="w-full h-auto object-cover"
             />

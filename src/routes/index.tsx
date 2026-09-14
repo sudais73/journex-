@@ -26,7 +26,7 @@ export default function Home() {
         <About locale={locale} />
         <Features locale={locale} />
         <Teachers locale={locale} />
-        <Pricing />
+       <Pricing locale={locale} />
         <Testimonials locale={locale} />
         <FAQ locale={locale} />
       </main>
