@@ -14,10 +14,7 @@ import { useState } from 'react';
 
 export const Route = createFileRoute('/dashboard')({
   beforeLoad: async () => {
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
-
+    const { data: { user } } = await supabase.auth.getUser();
     if (!user) {
       throw redirect({
         to: '/auth',
@@ -25,19 +22,15 @@ export const Route = createFileRoute('/dashboard')({
       });
     }
 
-    return { user };
-  },
-
-  loader: async ({ context }) => {
     const { data: profile } = await supabase
       .from('profiles')
       .select('*')
-      .eq('id', context.user.id)
+      .eq('id', user.id)
       .single();
 
-    return { profile };
+    // Returning this adds it to the route context for this route and all child routes
+    return { user, profile };
   },
-
   component: DashboardLayoutComponent,
 });
 
@@ -46,7 +39,7 @@ export const Route = createFileRoute('/dashboard')({
 // ─────────────────────────────────────────────
 
 function DashboardLayoutComponent() {
-  const { profile } = Route.useLoaderData();
+const { profile } = Route.useRouteContext();
   const router = useRouter();
   const [open, setOpen] = useState(false);
 
