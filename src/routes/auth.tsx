@@ -1,101 +1,123 @@
-import { createFileRoute } from '@tanstack/react-router'
 import { useState } from 'react';
+import { createFileRoute, useNavigate, useSearch } from '@tanstack/react-router';
+import { supabase } from '../lib/supabase';
 import { type Locale, translations } from '../lib/i18n';
-export const Route = createFileRoute('/auth')({
-  component: RouteComponent,
-})
 
-function RouteComponent() {
-    const [tab, setTab] = useState<'login' | 'register'>('register');
+export const Route = createFileRoute('/auth')({
+  component: AuthPage,
+});
+
+export function AuthPage() {
+  const search = useSearch({ from: '/auth' }) as { mode?: 'login' | 'register'; package?: string };
+  const navigate = useNavigate();
+
+  const [tab, setTab] = useState<'login' | 'register'>(search.mode === 'login' ? 'login' : 'register');
   const [locale] = useState<Locale>('om');
   const t = translations[locale].auth;
 
-  // Form state
-  const [form, setForm] = useState({
-    firstName: '',
-    middleName: '',
-    lastName: '',
-    job: '',
-    age: '',
-    phone: '',
-    accountNumber: '',
-    address: '',
-    email: '',
-    gender: 'male',
-    educationalStatus: 'High School',
-    referralUsername: '',
-    password: ''
-  });
+  // Sign up fields
+  const [firstName, setFirstName] = useState('');
+  const [middleName, setMiddleName] = useState('');
+  const [lastName, setLastName] = useState('');
+  const [job, setJob] = useState('');
+  const [age, setAge] = useState('');
+  const [phone, setPhone] = useState('');
+  const [accountNumber, setAccountNumber] = useState('');
+  const [address, setAddress] = useState('');
+  const [email, setEmail] = useState('');
+  const [gender, setGender] = useState('male');
+  const [educationalStatus, setEducationalStatus] = useState('High School');
+  const [referralUsername, setReferralUsername] = useState('');
+  const [password, setPassword] = useState('');
+
+  // Login fields
+  const [loginEmail, setLoginEmail] = useState('');
+  const [loginPassword, setLoginPassword] = useState('');
+
+  // Status indicators
   const [loading, setLoading] = useState(false);
-  const [msg, setMsg] = useState<string | null>(null);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [successMessage, setSuccessMessage] = useState<string | null>(null);
 
   const handleRegister = async (e: React.FormEvent) => {
-    // e.preventDefault();
-    // setLoading(true);
-    // setMsg(null);
+    e.preventDefault();
+    setLoading(true);
+    setErrorMessage(null);
+    setSuccessMessage(null);
 
-    // // 1. Sign up Supabase user
-    // const { data: authData, error: authError } = await supabase.auth.signUp({
-    //   email: form.email,
-    //   password: form.password,
-    // });
+    try {
+      const { data, error } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          data: {
+            first_name: firstName,
+            middle_name: middleName,
+            last_name: lastName,
+            work_job: job,
+            age: age ? parseInt(age, 10) : null,
+            phone,
+            account_number: accountNumber,
+            address,
+            gender,
+            educational_status: educationalStatus,
+            referral_username: referralUsername.trim() || null,
+            selected_package: search.package || null,
+          },
+        },
+      });
 
-    // if (authError || !authData.user) {
-    //   setMsg(authError?.message || "Registration failed");
-    //   setLoading(false);
-    //   return;
-    // }
+      if (error) throw error;
 
-    // // 2. Generate referral username (e.g., first + random 4 digits)
-    // const generatedUsername = `${form.firstName.toLowerCase()}${Math.floor(1000 + Math.random() * 9000)}`;
+      if (data.session) {
+        navigate({ to: '/dashboard' });
+      } else {
+        setSuccessMessage("Galmee milkaa'ee jira! Imeelii keessan mirkaneessaa (Check your email to confirm).");
+      }
+    } catch (err: any) {
+      setErrorMessage(err.message || "Rakkoon uumameera (An error occurred)");
+    } finally {
+      setLoading(false);
+    }
+  };
 
-    // // 3. Store the user profile
-    // const { error: profileError } = await supabase.from('profiles').insert([
-    //   {
-    //     id: authData.user.id,
-    //     first_name: form.firstName,
-    //     middle_name: form.middleName,
-    //     last_name: form.lastName,
-    //     work_job: form.job,
-    //     age: parseInt(form.age) || null,
-    //     phone: form.phone,
-    //     account_number: form.accountNumber,
-    //     address: form.address,
-    //     gender: form.gender,
-    //     educational_status: form.educationalStatus,
-    //     referral_username: form.referralUsername || null,
-    //     generated_username: generatedUsername,
-    //     role: 'partner',
-    //     pjp: 0,
-    //     tjp: 0
-    //   }
-    // ]);
+  const handleLogin = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+    setErrorMessage(null);
 
-    // if (profileError) {
-    //   setMsg(profileError.message);
-    // } else {
-    //   setMsg("Account created successfully! Check your inbox or proceed to login.");
-    // }
-    // setLoading(false);
+    try {
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email: loginEmail,
+        password: loginPassword,
+      });
+
+      if (error) throw error;
+
+      if (data.session) {
+        navigate({ to: '/dashboard' });
+      }
+    } catch (err: any) {
+      setErrorMessage(err.message || "Imeelii ykn jecha icchiitii dogoggora (Invalid login details)");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
-    <div className="min-h-screen bg-slate-100 flex flex-col items-center justify-center p-4">
-      {/* Brand Header */}
+    <div className="min-h-screen bg-slate-100 flex flex-col items-center justify-center p-4 py-12">
       <div className="flex items-center gap-2 mb-6">
-        <div className="bg-blue-600 text-white font-black rounded-lg w-8 h-8 flex items-center justify-center text-lg shadow-sm">
+        <div className="bg-[#0047cc] text-white font-black rounded-lg w-9 h-9 flex items-center justify-center text-lg shadow-sm">
           J
         </div>
-        <span className="text-xl font-bold tracking-tight text-slate-800">Journex</span>
+        <span className="text-2xl font-bold tracking-tight text-slate-800">Journex</span>
       </div>
 
-      {/* Main Auth Card */}
-      <div className="w-full max-w-xl bg-white border border-slate-200/80 rounded-2xl shadow-xl p-8">
-        {/* Toggle Switcher */}
+      <div className="w-full max-w-xl bg-white border border-slate-200/90 rounded-2xl shadow-xl p-8">
         <div className="flex bg-slate-100 p-1 rounded-xl mb-6">
           <button
             type="button"
-            onClick={() => setTab('login')}
+            onClick={() => { setTab('login'); setErrorMessage(null); }}
             className={`w-1/2 py-2 text-xs font-semibold rounded-lg transition ${
               tab === 'login' ? 'bg-white text-slate-800 shadow-sm' : 'text-slate-500 hover:text-slate-700'
             }`}
@@ -104,7 +126,7 @@ function RouteComponent() {
           </button>
           <button
             type="button"
-            onClick={() => setTab('register')}
+            onClick={() => { setTab('register'); setErrorMessage(null); }}
             className={`w-1/2 py-2 text-xs font-semibold rounded-lg transition ${
               tab === 'register' ? 'bg-white text-slate-800 shadow-sm' : 'text-slate-500 hover:text-slate-700'
             }`}
@@ -113,77 +135,87 @@ function RouteComponent() {
           </button>
         </div>
 
+        {errorMessage && (
+          <div className="mb-5 p-3 rounded-lg bg-rose-50 border border-rose-200 text-rose-700 text-xs font-medium">
+            {errorMessage}
+          </div>
+        )}
+
+        {successMessage && (
+          <div className="mb-5 p-3 rounded-lg bg-emerald-50 border border-emerald-200 text-emerald-700 text-xs font-medium">
+            {successMessage}
+          </div>
+        )}
+
         {tab === 'register' ? (
           <div>
             <h2 className="text-xl font-bold text-slate-900 mb-1">{t.title}</h2>
             <p className="text-xs text-slate-500 mb-6">{t.subtitle}</p>
 
-            {msg && <p className="text-xs p-3 rounded bg-blue-50 text-blue-700 mb-4">{msg}</p>}
-
             <form onSubmit={handleRegister} className="space-y-4">
               <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
                 <div>
                   <label className="text-[11px] font-semibold text-slate-600 block mb-1">{t.firstName} *</label>
-                  <input required value={form.firstName} onChange={e => setForm({ ...form, firstName: e.target.value })} className="w-full border rounded-lg px-3 py-2 text-xs focus:ring-2 focus:ring-blue-600 focus:outline-none" />
+                  <input required value={firstName} onChange={e => setFirstName(e.target.value)} className="w-full border rounded-lg px-3 py-2 text-xs focus:ring-2 focus:ring-blue-600 focus:outline-none" />
                 </div>
                 <div>
                   <label className="text-[11px] font-semibold text-slate-600 block mb-1">{t.middleName}</label>
-                  <input value={form.middleName} onChange={e => setForm({ ...form, middleName: e.target.value })} className="w-full border rounded-lg px-3 py-2 text-xs focus:ring-2 focus:ring-blue-600 focus:outline-none" />
+                  <input value={middleName} onChange={e => setMiddleName(e.target.value)} className="w-full border rounded-lg px-3 py-2 text-xs focus:ring-2 focus:ring-blue-600 focus:outline-none" />
                 </div>
                 <div>
                   <label className="text-[11px] font-semibold text-slate-600 block mb-1">{t.lastName} *</label>
-                  <input required value={form.lastName} onChange={e => setForm({ ...form, lastName: e.target.value })} className="w-full border rounded-lg px-3 py-2 text-xs focus:ring-2 focus:ring-blue-600 focus:outline-none" />
+                  <input required value={lastName} onChange={e => setLastName(e.target.value)} className="w-full border rounded-lg px-3 py-2 text-xs focus:ring-2 focus:ring-blue-600 focus:outline-none" />
                 </div>
               </div>
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <label className="text-[11px] font-semibold text-slate-600 block mb-1">{t.job}</label>
-                  <input value={form.job} onChange={e => setForm({ ...form, job: e.target.value })} className="w-full border rounded-lg px-3 py-2 text-xs focus:ring-2 focus:ring-blue-600 focus:outline-none" />
+                  <input value={job} onChange={e => setJob(e.target.value)} className="w-full border rounded-lg px-3 py-2 text-xs focus:ring-2 focus:ring-blue-600 focus:outline-none" />
                 </div>
                 <div>
                   <label className="text-[11px] font-semibold text-slate-600 block mb-1">{t.age}</label>
-                  <input type="number" value={form.age} onChange={e => setForm({ ...form, age: e.target.value })} className="w-full border rounded-lg px-3 py-2 text-xs focus:ring-2 focus:ring-blue-600 focus:outline-none" />
+                  <input type="number" min="12" max="100" value={age} onChange={e => setAge(e.target.value)} className="w-full border rounded-lg px-3 py-2 text-xs focus:ring-2 focus:ring-blue-600 focus:outline-none" />
                 </div>
               </div>
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <label className="text-[11px] font-semibold text-slate-600 block mb-1">{t.phone} *</label>
-                  <input required placeholder="+251..." value={form.phone} onChange={e => setForm({ ...form, phone: e.target.value })} className="w-full border rounded-lg px-3 py-2 text-xs focus:ring-2 focus:ring-blue-600 focus:outline-none" />
+                  <input required placeholder="+251..." value={phone} onChange={e => setPhone(e.target.value)} className="w-full border rounded-lg px-3 py-2 text-xs focus:ring-2 focus:ring-blue-600 focus:outline-none" />
                 </div>
                 <div>
                   <label className="text-[11px] font-semibold text-slate-600 block mb-1">{t.accNo}</label>
-                  <input value={form.accountNumber} onChange={e => setForm({ ...form, accountNumber: e.target.value })} className="w-full border rounded-lg px-3 py-2 text-xs focus:ring-2 focus:ring-blue-600 focus:outline-none" />
+                  <input value={accountNumber} onChange={e => setAccountNumber(e.target.value)} className="w-full border rounded-lg px-3 py-2 text-xs focus:ring-2 focus:ring-blue-600 focus:outline-none" />
                 </div>
               </div>
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <label className="text-[11px] font-semibold text-slate-600 block mb-1">{t.address}</label>
-                  <input value={form.address} onChange={e => setForm({ ...form, address: e.target.value })} className="w-full border rounded-lg px-3 py-2 text-xs focus:ring-2 focus:ring-blue-600 focus:outline-none" />
+                  <input value={address} onChange={e => setAddress(e.target.value)} className="w-full border rounded-lg px-3 py-2 text-xs focus:ring-2 focus:ring-blue-600 focus:outline-none" />
                 </div>
                 <div>
                   <label className="text-[11px] font-semibold text-slate-600 block mb-1">{t.email} *</label>
-                  <input type="email" required value={form.email} onChange={e => setForm({ ...form, email: e.target.value })} className="w-full border rounded-lg px-3 py-2 text-xs focus:ring-2 focus:ring-blue-600 focus:outline-none" />
+                  <input type="email" required value={email} onChange={e => setEmail(e.target.value)} className="w-full border rounded-lg px-3 py-2 text-xs focus:ring-2 focus:ring-blue-600 focus:outline-none" />
                 </div>
               </div>
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <label className="text-[11px] font-semibold text-slate-600 block mb-1">{t.gender}</label>
-                  <select value={form.gender} onChange={e => setForm({ ...form, gender: e.target.value })} className="w-full border rounded-lg px-3 py-2 text-xs focus:ring-2 focus:ring-blue-600 focus:outline-none">
+                  <select value={gender} onChange={e => setGender(e.target.value)} className="w-full border rounded-lg px-3 py-2 text-xs focus:ring-2 focus:ring-blue-600 focus:outline-none">
                     <option value="male">Male</option>
                     <option value="female">Female</option>
                   </select>
                 </div>
                 <div>
                   <label className="text-[11px] font-semibold text-slate-600 block mb-1">{t.education}</label>
-                  <select value={form.educationalStatus} onChange={e => setForm({ ...form, educationalStatus: e.target.value })} className="w-full border rounded-lg px-3 py-2 text-xs focus:ring-2 focus:ring-blue-600 focus:outline-none">
+                  <select value={educationalStatus} onChange={e => setEducationalStatus(e.target.value)} className="w-full border rounded-lg px-3 py-2 text-xs focus:ring-2 focus:ring-blue-600 focus:outline-none">
                     <option value="High School">High School</option>
                     <option value="Diploma">Diploma</option>
-                    <option value="Degree">Degree / University</option>
-                    <option value="Masters">Masters / PhD</option>
+                    <option value="Degree">Degree</option>
+                    <option value="Masters">Masters / Above</option>
                   </select>
                 </div>
               </div>
@@ -191,36 +223,61 @@ function RouteComponent() {
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <label className="text-[11px] font-semibold text-slate-600 block mb-1">{t.refUsername}</label>
-                  <input value={form.referralUsername} onChange={e => setForm({ ...form, referralUsername: e.target.value })} className="w-full border rounded-lg px-3 py-2 text-xs focus:ring-2 focus:ring-blue-600 focus:outline-none" />
+                  <input value={referralUsername} onChange={e => setReferralUsername(e.target.value)} className="w-full border rounded-lg px-3 py-2 text-xs focus:ring-2 focus:ring-blue-600 focus:outline-none" />
                 </div>
                 <div>
                   <label className="text-[11px] font-semibold text-slate-600 block mb-1">{t.password} *</label>
-                  <input type="password" required value={form.password} onChange={e => setForm({ ...form, password: e.target.value })} className="w-full border rounded-lg px-3 py-2 text-xs focus:ring-2 focus:ring-blue-600 focus:outline-none" />
+                  <input type="password" required minLength={6} value={password} onChange={e => setPassword(e.target.value)} className="w-full border rounded-lg px-3 py-2 text-xs focus:ring-2 focus:ring-blue-600 focus:outline-none" />
                 </div>
               </div>
 
               <button
                 type="submit"
                 disabled={loading}
-                className="w-full bg-[#0047cc] hover:bg-blue-700 text-white font-semibold py-2.5 rounded-lg text-sm transition mt-4"
+                className="w-full bg-[#0047cc] hover:bg-blue-700 disabled:bg-blue-300 text-white font-semibold py-3 rounded-lg text-xs tracking-wide transition mt-2 cursor-pointer"
               >
-                {loading ? "Processing..." : t.submit}
+                {loading ? "Uumaa jira..." : t.submit}
               </button>
             </form>
           </div>
         ) : (
-          <div className="py-6 text-center text-xs text-slate-500">
-            {/* Standard Login view */}
-            <input type="email" placeholder="Email" className="w-full border rounded-lg px-3 py-2 text-xs mb-3" />
-            <input type="password" placeholder="Password" className="w-full border rounded-lg px-3 py-2 text-xs mb-4" />
-            <button className="w-full bg-[#0047cc] text-white font-semibold py-2 rounded-lg text-xs">Log in</button>
+          <div>
+            <h2 className="text-xl font-bold text-slate-900 mb-1">Welcome back</h2>
+            <p className="text-xs text-slate-500 mb-6">Log into your Journex learning and partner account.</p>
+
+            <form onSubmit={handleLogin} className="space-y-4">
+              <div>
+                <label className="text-[11px] font-semibold text-slate-600 block mb-1">Email</label>
+                <input
+                  type="email"
+                  required
+                  value={loginEmail}
+                  onChange={e => setLoginEmail(e.target.value)}
+                  className="w-full border rounded-lg px-3 py-2 text-xs focus:ring-2 focus:ring-blue-600 focus:outline-none"
+                />
+              </div>
+              <div>
+                <label className="text-[11px] font-semibold text-slate-600 block mb-1">Password</label>
+                <input
+                  type="password"
+                  required
+                  value={loginPassword}
+                  onChange={e => setLoginPassword(e.target.value)}
+                  className="w-full border rounded-lg px-3 py-2 text-xs focus:ring-2 focus:ring-blue-600 focus:outline-none"
+                />
+              </div>
+
+              <button
+                type="submit"
+                disabled={loading}
+                className="w-full bg-[#0047cc] hover:bg-blue-700 disabled:bg-blue-300 text-white font-semibold py-3 rounded-lg text-xs tracking-wide transition mt-2 cursor-pointer"
+              >
+                {loading ? "Seenaa jira..." : "Log in"}
+              </button>
+            </form>
           </div>
         )}
       </div>
     </div>
   );
 }
-
-
-
-
