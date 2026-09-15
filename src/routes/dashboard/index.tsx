@@ -5,7 +5,7 @@ export const Route = createFileRoute('/dashboard/')({
 });
 
 function DashboardOverview() {
-  // Inherit profile data loaded by _dashboard.tsx
+  // Inherit profile data loaded by dashboard.tsx
   const { profile } = Route.useRouteContext();
   const referralUrl = typeof window !== 'undefined'
     ? `${window.location.origin}/auth?mode=register&ref=${profile?.generated_username}`
