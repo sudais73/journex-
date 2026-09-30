@@ -16,7 +16,7 @@ import { Footer } from '../components/Footer';
 export const Route = createFileRoute('/')({ component: Home })
 
 export default function Home() {
-  const [locale, setLocale] = useState<Locale>('om'); // Afaan Oromoo by default
+  const [locale, setLocale] = useState<Locale>('en'); // English by default
 
   return (
     <div className="min-h-screen flex flex-col font-sans bg-white text-slate-900">
