@@ -7,7 +7,6 @@ import {
 } from '@tanstack/react-router';
 import { supabase } from '../lib/supabase';
 import { useState } from 'react';
-import { convertLJPToETB } from '#/lib/points';
 
 // ─────────────────────────────────────────────
 // Route Definition
@@ -61,7 +60,7 @@ export const Route = createFileRoute('/dashboard')({
 // ─────────────────────────────────────────────
 
 function DashboardLayoutComponent() {
-const { profile } = Route.useRouteContext();
+  const { profile } = Route.useRouteContext();
   const router = useRouter();
   const [open, setOpen] = useState(false);
 
@@ -199,11 +198,10 @@ const { profile } = Route.useRouteContext();
             </p>
 
             <span
-              className={`inline-block mt-2 text-[9px] font-bold px-2 py-0.5 rounded-full ${
-                profile?.is_package_active
+              className={`inline-block mt-2 text-[9px] font-bold px-2 py-0.5 rounded-full ${profile?.is_package_active
                   ? 'bg-emerald-500/20 text-emerald-400'
                   : 'bg-amber-500/20 text-amber-400'
-              }`}
+                }`}
             >
               {profile?.is_package_active
                 ? 'Active Partner'
@@ -252,24 +250,25 @@ const { profile } = Route.useRouteContext();
 
           </div>
 
+          <div className="flex items-center gap-2 text-xs font-semibold">
+            {/* BP */}
+            <div className="bg-blue-50 border border-blue-200/60 px-2.5 py-1 rounded-xl flex items-center gap-1.5">
+              <span className="text-[10px] uppercase font-bold text-blue-600">BP:</span>
+              <span className="text-blue-900 font-extrabold">{profile?.bp ?? 0}</span>
+            </div>
 
-<div className="flex items-center gap-3 text-xs font-semibold">
-  {/* BP Card: Non-convertible */}
-  <div className="bg-blue-50 border border-blue-200/60 px-3 py-1 rounded-xl flex items-center gap-1.5">
-    <span className="text-[10px] uppercase font-bold text-blue-600">BP:</span>
-    <span className="text-blue-900 font-extrabold">{profile?.bp ?? 0}</span>
-    <span className="text-[9px] text-blue-500 font-medium">(Academic)</span>
-  </div>
+            {/* LJP */}
+            <div className="bg-emerald-50 border border-emerald-200/60 px-2.5 py-1 rounded-xl flex items-center gap-1.5">
+              <span className="text-[10px] uppercase font-bold text-emerald-600">LJP:</span>
+              <span className="text-emerald-900 font-extrabold">{profile?.ljp ?? 0}</span>
+            </div>
 
-  {/* LJP Card: Convertible */}
-  <div className="bg-emerald-50 border border-emerald-200/60 px-3 py-1 rounded-xl flex items-center gap-1.5">
-    <span className="text-[10px] uppercase font-bold text-emerald-600">LJP:</span>
-    <span className="text-emerald-900 font-extrabold">{profile?.ljp ?? 0}</span>
-    <span className="text-emerald-600 text-[10px] font-bold">
-      ≈ {convertLJPToETB(profile?.ljp ?? 0).toLocaleString()} ETB
-    </span>
-  </div>
-</div>
+            {/* TJP */}
+            <div className="bg-purple-50 border border-purple-200/60 px-2.5 py-1 rounded-xl flex items-center gap-1.5">
+              <span className="text-[10px] uppercase font-bold text-purple-600">TJP:</span>
+              <span className="text-purple-900 font-extrabold">{profile?.tjp ?? 0}</span>
+            </div>
+          </div>
 
         </header>
 

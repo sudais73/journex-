@@ -1,28 +1,38 @@
 export type PackageTier = 'foundation' | 'progress' | 'mastery' | 'excellence';
 
-export const LJP_TO_ETB_RATE = 20;
+export const CONVERSION_RATE = 20; // 1 LJP = 20 ETB, 1 TJP = 20 ETB
+export const TJP_WITHDRAWAL_CHUNK = 70;
 
-export function calculateBP(coursePrice: number): number {
-  return coursePrice / 20;
+export function convertPointsToETB(points: number): number {
+  return points * CONVERSION_RATE;
 }
 
-export function convertLJPToETB(ljp: number): number {
-  return ljp * LJP_TO_ETB_RATE;
-}
+/**
+ * Calculates withdrawable TJP chunks and remainder.
+ * Must be >= 70, in multiples of 70.
+ */
+export function calculateTjpWithdrawal(tjpBalance: number = 0) {
+  const balance = Math.floor(tjpBalance);
 
-const COMMISSION_MATRIX: Record<PackageTier, Record<PackageTier, number>> = {
-  foundation: { foundation: 0.11, progress: 0.12, mastery: 0.135, excellence: 0.145 },
-  progress:   { foundation: 0.115, progress: 0.13, mastery: 0.14,  excellence: 0.15 },
-  mastery:    { foundation: 0.12, progress: 0.135, mastery: 0.145, excellence: 0.16 },
-  excellence: { foundation: 0.125, progress: 0.14,  mastery: 0.15,  excellence: 0.17 },
-};
+  if (balance < TJP_WITHDRAWAL_CHUNK) {
+    return {
+      withdrawableTjp: 0,
+      withdrawableEtb: 0,
+      lockedTjp: Number(tjpBalance.toFixed(2)),
+      pointsNeededForNext: TJP_WITHDRAWAL_CHUNK - balance,
+      canWithdraw: false,
+    };
+  }
 
-export function getReferralCommissionRate(myTier: PackageTier, soldTier: PackageTier): number {
-  return COMMISSION_MATRIX[myTier]?.[soldTier] ?? 0;
-}
+  const withdrawableTjp = Math.floor(balance / TJP_WITHDRAWAL_CHUNK) * TJP_WITHDRAWAL_CHUNK;
+  const lockedTjp = Number((tjpBalance - withdrawableTjp).toFixed(2));
+  const pointsNeededForNext = TJP_WITHDRAWAL_CHUNK - (balance % TJP_WITHDRAWAL_CHUNK);
 
-export function calculatePotentialLJP(myTier: PackageTier, soldTier: PackageTier, coursePrice: number): number {
-  const rate = getReferralCommissionRate(myTier, soldTier);
-  const bp = calculateBP(coursePrice);
-  return Number((rate * bp).toFixed(2));
+  return {
+    withdrawableTjp,
+    withdrawableEtb: withdrawableTjp * CONVERSION_RATE,
+    lockedTjp,
+    pointsNeededForNext: pointsNeededForNext === TJP_WITHDRAWAL_CHUNK ? 0 : pointsNeededForNext,
+    canWithdraw: true,
+  };
 }
