@@ -8,10 +8,18 @@ export const Route = createFileRoute('/auth')({
 });
 
 export function AuthPage() {
-  const search = useSearch({ from: '/auth' }) as { mode?: 'login' | 'register'; package?: string };
+  // 1. Include 'ref' in the typed search params
+  const search = useSearch({ from: '/auth' }) as {
+    mode?: 'login' | 'register';
+    package?: string;
+    ref?: string;
+  };
   const navigate = useNavigate();
 
-  const [tab, setTab] = useState<'login' | 'register'>(search.mode === 'login' ? 'login' : 'register');
+  // If a referral code exists in the URL, automatically default to the registration tab
+  const [tab, setTab] = useState<'login' | 'register'>(
+    search.ref || search.mode === 'register' ? 'register' : search.mode === 'login' ? 'login' : 'register'
+  );
   const [locale] = useState<Locale>('om');
   const t = translations[locale].auth;
 
@@ -27,7 +35,12 @@ export function AuthPage() {
   const [email, setEmail] = useState('');
   const [gender, setGender] = useState('male');
   const [educationalStatus, setEducationalStatus] = useState('High School');
-  const [referralUsername, setReferralUsername] = useState('');
+
+  // 2. Automatically populate referral username from URL query param
+  const [referralUsername, setReferralUsername] = useState(
+    search.ref ? decodeURIComponent(search.ref).trim() : ''
+  );
+  console.log('Referral Username:', referralUsername); // Debugging line
   const [password, setPassword] = useState('');
 
   // Login fields
@@ -222,8 +235,17 @@ export function AuthPage() {
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="text-[11px] font-semibold text-slate-600 block mb-1">{t.refUsername}</label>
-                  <input value={referralUsername} onChange={e => setReferralUsername(e.target.value)} className="w-full border rounded-lg px-3 py-2 text-xs focus:ring-2 focus:ring-blue-600 focus:outline-none" />
+                  <label className="text-[11px] font-semibold text-slate-600 block mb-1">
+                    {t.refUsername} {search.ref && <span className="text-emerald-600 font-bold">(Applied ✓)</span>}
+                  </label>
+                  <input
+                    value={referralUsername}
+                    onChange={e => setReferralUsername(e.target.value)}
+                    readOnly={Boolean(search.ref)}
+                    className={`w-full border rounded-lg px-3 py-2 text-xs focus:ring-2 focus:ring-blue-600 focus:outline-none ${
+                      search.ref ? 'bg-slate-100 text-slate-600 cursor-not-allowed font-medium' : ''
+                    }`}
+                  />
                 </div>
                 <div>
                   <label className="text-[11px] font-semibold text-slate-600 block mb-1">{t.password} *</label>

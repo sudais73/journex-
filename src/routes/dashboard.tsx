@@ -7,6 +7,7 @@ import {
 } from '@tanstack/react-router';
 import { supabase } from '../lib/supabase';
 import { useState } from 'react';
+import { convertLJPToETB } from '#/lib/points';
 
 // ─────────────────────────────────────────────
 // Route Definition
@@ -22,13 +23,34 @@ export const Route = createFileRoute('/dashboard')({
       });
     }
 
-    const { data: profile } = await supabase
+    // Fetch user profile
+    let { data: profile } = await supabase
       .from('profiles')
       .select('*')
       .eq('id', user.id)
-      .single();
+      .maybeSingle();
 
-    // Returning this adds it to the route context for this route and all child routes
+    // Fallback: If for any reason trigger didn't create it, insert default
+    if (!profile) {
+      const randSuffix = Math.floor(1000 + Math.random() * 9000).toString();
+      const generatedUsername = `user${randSuffix}`;
+
+      const { data: newProfile } = await supabase
+        .from('profiles')
+        .insert({
+          id: user.id,
+          first_name: user.user_metadata?.first_name || 'User',
+          last_name: user.user_metadata?.last_name || 'Member',
+          phone: user.user_metadata?.phone || '',
+          generated_username: generatedUsername,
+          role: 'partner',
+        })
+        .select()
+        .single();
+
+      profile = newProfile;
+    }
+
     return { user, profile };
   },
   component: DashboardLayoutComponent,
@@ -230,18 +252,24 @@ const { profile } = Route.useRouteContext();
 
           </div>
 
-          {/* Points */}
-          <div className="flex items-center gap-2 md:gap-4 text-xs font-semibold">
 
-            <span className="text-blue-600 bg-blue-50 px-2 md:px-3 py-1 rounded-full">
-              PJP: {profile?.pjp ?? 0}
-            </span>
+<div className="flex items-center gap-3 text-xs font-semibold">
+  {/* BP Card: Non-convertible */}
+  <div className="bg-blue-50 border border-blue-200/60 px-3 py-1 rounded-xl flex items-center gap-1.5">
+    <span className="text-[10px] uppercase font-bold text-blue-600">BP:</span>
+    <span className="text-blue-900 font-extrabold">{profile?.bp ?? 0}</span>
+    <span className="text-[9px] text-blue-500 font-medium">(Academic)</span>
+  </div>
 
-            <span className="text-indigo-600 bg-indigo-50 px-2 md:px-3 py-1 rounded-full">
-              TJP: {profile?.tjp ?? 0}
-            </span>
-
-          </div>
+  {/* LJP Card: Convertible */}
+  <div className="bg-emerald-50 border border-emerald-200/60 px-3 py-1 rounded-xl flex items-center gap-1.5">
+    <span className="text-[10px] uppercase font-bold text-emerald-600">LJP:</span>
+    <span className="text-emerald-900 font-extrabold">{profile?.ljp ?? 0}</span>
+    <span className="text-emerald-600 text-[10px] font-bold">
+      ≈ {convertLJPToETB(profile?.ljp ?? 0).toLocaleString()} ETB
+    </span>
+  </div>
+</div>
 
         </header>
 

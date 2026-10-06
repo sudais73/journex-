@@ -1,4 +1,3 @@
-// app/components/Navbar.tsx, Hero.tsx, About.tsx, etc.
 import { type Locale, translations } from '../lib/i18n';
 
 export function About({ locale }: { locale: Locale }) {

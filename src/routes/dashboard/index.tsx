@@ -1,3 +1,4 @@
+import { convertLJPToETB } from '#/lib/points';
 import { createFileRoute, Link } from '@tanstack/react-router';
 
 export const Route = createFileRoute('/dashboard/')({
@@ -36,19 +37,37 @@ function DashboardOverview() {
         </div>
       )}
 
-      {/* Stats Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-5">
-        <div className="p-5 bg-white rounded-2xl border border-slate-200 shadow-sm">
-          <span className="text-[11px] font-semibold text-slate-500 uppercase">My Role</span>
-          <p className="text-2xl font-black text-slate-900 mt-1 capitalize">{profile?.role || 'Partner'}</p>
+
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        {/* BP Card */}
+        <div className="p-5 bg-white rounded-2xl border border-slate-200 shadow-xs">
+          <div className="flex items-center justify-between">
+            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Bonus Points (BP)</span>
+            <span className="text-[10px] font-bold bg-slate-100 text-slate-600 px-2 py-0.5 rounded-full">Non-Convertible</span>
+          </div>
+          <p className="text-2xl font-black text-blue-600 mt-2">{profile?.bp ?? 0}</p>
+          <p className="text-xs text-slate-400 mt-1">Earned from enrolling in courses. Measures academic milestones.</p>
         </div>
-        <div className="p-5 bg-white rounded-2xl border border-slate-200 shadow-sm">
-          <span className="text-[11px] font-semibold text-slate-500 uppercase">Personal Journey Points (PJP)</span>
-          <p className="text-2xl font-black text-blue-600 mt-1">{profile?.pjp ?? 0}</p>
+
+        {/* LJP Card */}
+        <div className="p-5 bg-white rounded-2xl border border-slate-200 shadow-xs">
+          <div className="flex items-center justify-between">
+            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Learning Journey Points (LJP)</span>
+            <span className="text-[10px] font-bold bg-emerald-50 text-emerald-700 px-2 py-0.5 rounded-full">Convertible</span>
+          </div>
+          <p className="text-2xl font-black text-emerald-600 mt-2">{profile?.ljp ?? 0}</p>
+          <p className="text-xs text-slate-400 mt-1">Earned when direct invitees purchase packages.</p>
         </div>
-        <div className="p-5 bg-white rounded-2xl border border-slate-200 shadow-sm">
-          <span className="text-[11px] font-semibold text-slate-500 uppercase">Team Journey Points (TJP)</span>
-          <p className="text-2xl font-black text-indigo-600 mt-1">{profile?.tjp ?? 0}</p>
+
+        {/* Cash Value */}
+        <div className="p-5 bg-[#0b192e] text-white rounded-2xl border border-slate-800 shadow-xs flex flex-col justify-between">
+          <div>
+            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Withdrawable Value</span>
+            <p className="text-2xl font-black text-emerald-400 mt-2">
+              {convertLJPToETB(profile?.ljp ?? 0).toLocaleString()} <span className="text-sm font-semibold text-white">ETB</span>
+            </p>
+          </div>
+          <p className="text-[11px] text-slate-400 mt-2">1 LJP = 20 ETB conversion rate</p>
         </div>
       </div>
 

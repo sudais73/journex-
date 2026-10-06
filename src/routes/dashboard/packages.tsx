@@ -37,38 +37,45 @@ function DashboardPackages() {
     { id: 'ar-mastery', name: 'Arabic Mastery', lang: 'arabic', tier: 'Mastery', price: '15,390 ETB', rawPrice: 15390, pjp: 153 },
     { id: 'ar-excellence', name: 'Arabic Excellence', lang: 'arabic', tier: 'Excellence', price: '21,436 ETB', rawPrice: 21436, pjp: 214 },
   ];
+const handleExecuteTestPayment = async () => {
+  if (!selectedPkg) return;
+  setIsProcessing(true);
 
-  const handleExecuteTestPayment = async () => {
-    if (!selectedPkg) return;
-    setIsProcessing(true);
+  try {
+    // 1. Get the authenticated user ID directly to ensure it is never null
+    let userId = profile?.id;
 
-    try {
-      // Simulate network latency
-      await new Promise((resolve) => setTimeout(resolve, 1200));
-
-      const { error } = await supabase.rpc('complete_package_purchase', {
-        p_user_id: profile.id,
-        p_package_id: selectedPkg.id,
-        p_language: selectedPkg.lang,
-        p_tier: selectedPkg.tier,
-        p_amount: selectedPkg.rawPrice,
-        p_pjp: selectedPkg.pjp,
-        p_payment_method: `${paymentMethod}_test_sandbox`,
-      });
-
-      if (error) throw error;
-
-      setSuccessNotice(`Payment successful via ${paymentMethod === 'telebirr' ? 'Telebirr' : 'CBE Birr'}! ${selectedPkg.name} activated.`);
-      setSelectedPkg(null);
-
-      // Invalidate route so parent loader refreshes profile status
-      await router.invalidate();
-    } catch (err: any) {
-      alert(err.message || 'Payment simulation failed.');
-    } finally {
-      setIsProcessing(false);
+    if (!userId) {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        throw new Error("Session expired. Please log in again.");
+      }
+      userId = user.id;
     }
-  };
+
+    // 2. Call RPC with verified user ID
+    const { error } = await supabase.rpc('complete_package_purchase', {
+      p_user_id: userId,
+      p_package_id: selectedPkg.id,
+      p_language: selectedPkg.lang,
+      p_tier: selectedPkg.tier.toLowerCase(),
+      p_amount: selectedPkg.rawPrice,
+      p_payment_method: `${paymentMethod}_test_sandbox`,
+    });
+
+    if (error) throw error;
+
+    setSuccessNotice(`Payment successful! ${selectedPkg.name} activated.`);
+    setSelectedPkg(null);
+
+    // Refresh context and loaders
+    await router.invalidate();
+  } catch (err: any) {
+    alert(err.message || 'Payment execution failed.');
+  } finally {
+    setIsProcessing(false);
+  }
+};
 
   return (
     <div className="space-y-6">
