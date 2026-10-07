@@ -20,7 +20,7 @@ export function AuthPage() {
   const [tab, setTab] = useState<'login' | 'register'>(
     search.ref || search.mode === 'register' ? 'register' : search.mode === 'login' ? 'login' : 'register'
   );
-  const [locale] = useState<Locale>('om');
+  const [locale] = useState<Locale>('en'); // Default to English; you can change this based on your app's logic
   const t = translations[locale].auth;
 
   // Sign up fields

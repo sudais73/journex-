@@ -37,9 +37,9 @@ export function Footer() {
         <div>
           <h4 className="font-semibold text-white mb-3">Contact</h4>
           <ul className="space-y-1.5 text-[11px]">
-            <li>Phone: +251 9900505765</li>
-            <li>Email: inquiry@journex.org</li>
-            <li>Location: Addis Ababa, Ethiopia</li>
+            <li>Phone: <a href="tel:+251900577765">+251 900577765</a></li>
+            <li>Email: JournexEdu@gmail.com</li>
+            <li>Location: Shashanne, Oromia, Ethiopia</li>
           </ul>
         </div>
       </div>
